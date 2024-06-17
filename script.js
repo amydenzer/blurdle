@@ -93,39 +93,55 @@ function checkGuess () {
         return
     }
 
-    
-    for (let i = 0; i < 5; i++) {
-        let letterColor = ''
-        let box = row.children[i]
-        let letter = currentGuess[i]
-        
-        let letterPosition = rightGuess.indexOf(currentGuess[i])
-        // is letter in the correct guess
-        if (letterPosition === -1) {
-            letterColor = 'grey'
-        } else {
-            // now, letter is definitely in word
-            // if letter index and right guess index are the same
-            // letter is in the right position 
-            if (currentGuess[i] === rightGuess[i]) {
-                // shade green 
-                letterColor = 'green'
-            } else {
-                // shade box yellow
-                letterColor = 'yellow'
-            }
+    let letterCount = {};
 
-            rightGuess[letterPosition] = "#"
+    // Count letters in the rightGuessString
+    for (let i = 0; i < rightGuess.length; i++) {
+        let letter = rightGuess[i];
+        if (letterCount[letter]) {
+            letterCount[letter]++;
+        } else {
+            letterCount[letter] = 1;
+        }
+    }
+
+    // Mark the correct position letters first (green)
+    for (let i = 0; i < 5; i++) {
+        let box = row.children[i];
+        let letter = currentGuess[i];
+
+        if (letter === rightGuess[i]) {
+            // Letter is in the correct position
+            box.style.backgroundColor = 'green';
+            shadeKeyBoard(letter, 'green');
+            rightGuess[i] = null;
+            letterCount[letter]--;
+        }
+    }
+
+    // Mark the correct letter but wrong position (yellow)
+    for (let i = 0; i < 5; i++) {
+        let box = row.children[i];
+        let letter = currentGuess[i];
+
+        if (box.style.backgroundColor !== 'green') {
+            if (rightGuess.includes(letter) && letterCount[letter] > 0) {
+                // Letter is in the word but in the wrong position
+                box.style.backgroundColor = 'yellow';
+                shadeKeyBoard(letter, 'yellow');
+                letterCount[letter]--;
+            } else {
+                // Letter is not in the word
+                box.style.backgroundColor = 'grey';
+                shadeKeyBoard(letter, 'grey');
+            }
         }
 
-        let delay = 250 * i
-        setTimeout(()=> {
-            //flip box
-            animateCSS(box, 'flipInX')
-            //shade box
-            box.style.backgroundColor = letterColor
-            shadeKeyBoard(letter, letterColor)
-        }, delay)
+        let delay = 250 * i;
+        setTimeout(() => {
+            // Flip box
+            animateCSS(box, 'flipInX');
+        }, delay);
     }
 
     if (guessString === rightGuessString) {
@@ -181,8 +197,7 @@ const animateCSS = (element, animation, prefix = 'animate__') =>
   // We create a Promise and return it
   new Promise((resolve, reject) => {
     const animationName = `${prefix}${animation}`;
-    // const node = document.querySelector(element);
-    const node = element
+    const node = element;
     node.style.setProperty('--animate-duration', '0.3s');
     
     node.classList.add(`${prefix}animated`, animationName);
